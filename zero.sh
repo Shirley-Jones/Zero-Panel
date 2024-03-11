@@ -1,5 +1,5 @@
 #!/bin/bash
-#Project address: http://github.com
+#Project address: https://github.com/Shirley-Jones/OpenVPN-Zero-Panel
 #Thank you very much for using this project!
 
 Download_address_selection()
@@ -8,7 +8,7 @@ Download_address_selection()
 	echo
 	echo "请选择下载地址"
 	echo "1、Github"
-	echo "2、私有源"
+	echo "2、Shirley's"
 	read -p "请选择[1-2]: " Download_address_Option
 	
 	while [[ ${Download_address_Option} == "" ]]
@@ -16,7 +16,7 @@ Download_address_selection()
 		echo -e "\033[31m检测到下载地址没有选择，请重新尝试！\033[0m"
 		echo "请选择下载地址"
 		echo "1、Github"
-		echo "2、私有源"
+		echo "2、Shirley's"
 		read -p "请选择[1-2]: " Download_address_Option
 	done
 	
@@ -29,7 +29,7 @@ Download_address_selection()
 	fi
 	
 	if [[ ${Download_address_Option} == "2" ]];then
-		echo "已选择【私有源】"
+		echo "已选择【Shirley's】"
 		Download_Host="https://api.qiaouu.com/zero_resources"
 	fi
 	
