@@ -14,6 +14,7 @@ OpenVPN Zero流控|拥有简单的后台管理|仅供个人使用|支持Debian�
 
 ## 安装脚本
 如果出现安装失败，请全格重装系统，手动更新yum源后重新执行安装脚本即可。
+
 Github
 ```shell script
 wget --no-check-certificate -O zero.sh https://raw.githubusercontent.com/Shirley-Jones/OpenVPN-Zero-Panel/main/zero.sh && chmod +x ./zero.sh && ./zero.sh
