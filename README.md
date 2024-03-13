@@ -21,7 +21,7 @@ OpenVPN Zero流控|拥有简单的后台管理|仅供个人使用|支持Debian�
 wget --no-check-certificate -O zero.sh https://raw.githubusercontent.com/Shirley-Jones/Zero-Panel/main/zero.sh && chmod +x ./zero.sh && ./zero.sh
 ```
 
-* Shirley's
+* Shirley's (Asia HK)
 ```shell script
 wget --no-check-certificate -O zero.sh https://api.qiaouu.com/zero_resources/zero.sh && chmod +x ./zero.sh && ./zero.sh
 ```
