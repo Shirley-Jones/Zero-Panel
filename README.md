@@ -23,7 +23,7 @@ wget --no-check-certificate -O zero.sh https://raw.githubusercontent.com/Shirley
 
 * Shirley's (Asia HK)
 ```shell script
-wget --no-check-certificate -O zero.sh https://api.qiaouu.com/zero_resources/zero.sh && chmod +x ./zero.sh && ./zero.sh
+wget --no-check-certificate -O zero.sh https://api.qiaouu.com/shell/zero_resources/zero.sh && chmod +x ./zero.sh && ./zero.sh
 ```
 
 
