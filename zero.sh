@@ -1,5 +1,5 @@
 #!/bin/bash
-#Project address: https://github.com/Shirley-Jones/OpenVPN-Zero-Panel
+#Project address: https://github.com/Shirley-Jones/Zero-Panel
 #Thank you very much for using this project!
 
 Download_address_selection()
@@ -25,12 +25,12 @@ Download_address_selection()
 	
 	if [[ ${Download_address_Option} == "1" ]];then
 		echo "已选择【Github】"
-		Download_Host="https://raw.githubusercontent.com/Shirley-Jones/OpenVPN-Zero-Panel/main/source"
+		Download_Host="https://raw.githubusercontent.com/Shirley-Jones/Zero-Panel/main/source"
 	fi
 	
 	if [[ ${Download_address_Option} == "2" ]];then
 		echo "已选择【Shirley's】"
-		Download_Host="https://api.qiaouu.com/zero_resources"
+		Download_Host="https://api.qiaouu.com/shell/zero_resources"
 	fi
 	
 	return 0;
@@ -700,6 +700,7 @@ Install_Zero()
 		echo "谢谢您!"
 		echo "---------------------------------------------------------------"
 	else
+		#节点模式
 		clear
 		echo "问候！"
 		echo "您的Zero节点系统安装完成，以下是您的安装信息"
@@ -1009,7 +1010,182 @@ Install_Zero_Simple()
 	
 }
 
+Zero_Forwarding_mode_install_guide()
+{
+	clear
+	sleep 1
+	
+	echo
+	read -p "请输入SSH端口号: " SSH_Port
+	while [[ ${SSH_Port} == "" ]]
+	do
+		echo -e "\033[31m检测到SSH端口号没有输入，请重新尝试！\033[0m"
+		read -p "请输入SSH端口号: " SSH_Port
+	done
+	
+	
+	echo
+	read -p "请输入目标节点IP/域名: " Target_address
+	while [[ ${Target_address} == "" ]]
+	do
+		echo -e "\033[31m检测到目标节点IP/域名没有输入，请重新尝试！\033[0m"
+		read -p "请输入目标节点IP/域名: " Target_address
+	done
+	
+	
+	
+	
+	Download_address_selection
+	
+	
+	sleep 1
+	echo
+	echo "安装信息收集已完成，即将开始安装！"
+	sleep 3
+	
+	return 0;
+}
 
+
+
+Install_Zero_Forwarding_mode()
+{
+	
+	
+		
+	#----------开始安装----------
+	
+	clear
+	sleep 1
+	
+	echo
+	echo "正在初始化环境..."
+	
+	if [[ ${ALL_RAM_free} -lt "800" ]]; then
+		#内存少于800MB  创建虚拟内存Swap 1GB
+		fallocate -l 1G /ZeroSwap
+		ls -lh /ZeroSwap >/dev/null 2>&1
+		chmod 600 /ZeroSwap
+		mkswap /ZeroSwap >/dev/null 2>&1
+		swapon /ZeroSwap >/dev/null 2>&1
+		echo "/ZeroSwap none swap sw 0 0" >> /etc/fstab
+	fi
+	
+	
+	if [[ ${Linux_OS} == "CentOS" ]]; then 
+		#设置SELinux宽容模式
+		setenforce 0 >/dev/null 2>&1
+		sed -i "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config >/dev/null 2>&1
+		yum install make openssl gcc gdb net-tools unzip psmisc wget curl zip vim telnet -y >/dev/null 2>&1
+		yum install nss telnet avahi openssl openssl-libs openssl-devel lzo lzo-devel pam pam-devel automake pkgconfig gawk tar zip unzip net-tools psmisc gcc pkcs11-helper libxml2 libxml2-devel bzip2 bzip2-devel libcurl libcurl-devel libjpeg libjpeg-devel libpng libpng-devel freetype freetype-devel gmp gmp-devel libmcrypt libmcrypt-devel readline readline-devel libxslt libxslt-devel --skip-broken -y >/dev/null 2>&1
+		yum install epel-release -y >/dev/null 2>&1
+		#创建新缓存 国内服务器安装较慢请耐心等待
+		yum clean all >/dev/null 2>&1
+		yum makecache >/dev/null 2>&1
+	fi
+	
+	if [[ ${Linux_OS} == "Debian" ]] || [[ ${Linux_OS} == "Ubuntu" ]]; then 
+		#--force-yes
+		apt-get update >/dev/null 2>&1
+		apt purge needrestart -y >/dev/null 2>&1
+		DEBIAN_FRONTEND=noninteractive apt install lsb-release ca-certificates -y >/dev/null 2>&1
+		DEBIAN_FRONTEND=noninteractive apt install apt-transport-https software-properties-common -y  >/dev/null 2>&1
+		DEBIAN_FRONTEND=noninteractive apt install make openssl gcc gdb net-tools unzip psmisc wget curl zip vim telnet -y >/dev/null 2>&1
+	fi
+	
+	
+	
+	echo "正在设置中转模式..."
+	#下载Zero Proxy
+	rm -rf /Zero
+	mkdir /Zero
+	wget -q --no-check-certificate ${Download_Host}/Zero_Proxy.zip -P /Zero
+	cd /Zero
+	unzip -o /Zero/Zero_Proxy.zip >/dev/null 2>&1
+	rm -rf /Zero/Zero_Proxy.zip
+	chmod -R 0777 /Zero
+	
+	
+	#编译Zero Proxy
+	if [ ! -f /Zero/Core/Proxy.c ]; then
+		echo "警告，Proxy源码文件不存在，请重新尝试！"
+		exit 1;
+	else
+		rm -rf /Zero/Core/Proxy.bin
+		sed -i "s/Target_address/"${Target_address}"/g" /Zero/Core/Proxy.c
+		sed -i "s/Target_Port/1194/g" /Zero/Core/Proxy.c
+		gcc -o /Zero/Core/Proxy.bin /Zero/Core/Proxy.c >/dev/null 2>&1
+		if [ ! -f /Zero/Core/Proxy.bin ]; then
+			echo "Zero Proxy编译失败，请在程序安装完成后手动编译Proxy文件到/Zero/Core/Proxy.bin  否则中转程序不能正常工作！！！"
+		else
+			chmod -R 0777 /Zero/Core/Proxy.bin >/dev/null 2>&1
+		fi
+	fi
+	
+	
+	
+	#配置服务并设置Zero proxy开机自启
+	mv /Zero/proxy.service /lib/systemd/system/proxy.service
+	#重新加载所有服务
+	systemctl daemon-reload >/dev/null 2>&1
+	#启动服务
+	systemctl start proxy.service >/dev/null 2>&1
+	#设置开机自启
+	systemctl enable proxy.service >/dev/null 2>&1
+	
+	
+	
+	#修改亚洲香港时区
+	#列出全球时区 timedatectl list-timezones
+	#以下为常用时区
+	#韩国首尔 Asia/Seoul
+	#台湾台北 Asia/Taipei
+	#香港 Asia/Hong_Kong
+	#中国上海 Asia/Shanghai
+	#美国纽约 America/New_York
+	#日本东京 Asia/Tokyo
+	Time_zone_detection=$(timedatectl | grep "Asia/Hong_Kong")
+	if [[ ${Time_zone_detection} == "" ]]; then 
+		timedatectl set-local-rtc 0 >/dev/null 2>&1
+		timedatectl set-timezone Asia/Hong_Kong >/dev/null 2>&1
+	fi
+	
+	
+	echo "所有文件安装已完成，即将结束安装...."
+	sleep 3
+	clear
+	echo "问候！"
+	echo "您的Zero中转系统安装完成，以下是您的安装信息"
+	echo "---------------------------------------------------------------"
+	echo "主要信息: "
+	echo "已将您的IP: "${Server_IP}"转发至: "${Target_address}""
+	echo "---------------------------------------------------------------"
+	echo "端口信息"
+	echo "请您在服务器后台面板 防火墙/安全组中 开启以下端口"
+	echo "以下前面四个端口都可以转发到中转节点!!!"
+	echo "TCP 8081 8082 8083 8084 "${SSH_Port}""
+	echo "---------------------------------------------------------------"
+	echo "使用方法"
+	echo "您直接在后台添加新的服务器，IP填写您的目标节点IP，下方域名处填写本机的IP或者域名即可！"
+	echo "线路中的IP直接填写本机IP或者域名，系统将会自动转发到目标节点!!!"
+	echo "请登录您的目标节点SSH界面，输入 systemctl stop proxy.service 将proxy停止!!!"
+	echo "---------------------------------------------------------------"
+	echo "Zero Proxy命令信息"
+	echo "启动 (systemctl start proxy.service)"
+	echo "停止 (systemctl stop proxy.service)"
+	echo "重新启动 (systemctl restart proxy.service)"
+	echo "查询状态 (systemctl status proxy.service)"
+	echo "---------------------------------------------------------------"
+	echo "其他信息"
+	echo "系统时区已修改为:"$(timedatectl | grep "Asia/Hong_Kong")" "
+	echo "安装后有问题联系技术  "
+	echo "谢谢您!"
+	echo "---------------------------------------------------------------"
+	return 0;
+	
+	
+	
+}
 
 
 Installation_Selection()
@@ -1022,6 +1198,7 @@ Installation_Selection()
 	echo "Zero 2.0 (Official version)"
 	echo "201.全新安装(一台服务器推荐)"
 	echo "202.安装节点"
+	echo "203.安装中转节点(请先看说明在使用!!!)"
 	echo
 	echo "Other"
 	echo "001.卸载Zero"
@@ -1050,6 +1227,11 @@ Installation_Selection()
 			Installation_mode="Node";
 			Zero_install_guide
 			Install_Zero
+			return 0;
+		;;
+		"203")
+			Zero_Forwarding_mode_install_guide
+			Install_Zero_Forwarding_mode
 			return 0;
 		;;
 		"001")
