@@ -9,7 +9,7 @@ OpenVPN Zero+Trojan免域名版流控|拥有简单的后台管理|仅供个人�
 * 网络：必须具有固定公网IP（IPV4）
 
 ## 安装脚本
-* 如果出现安装失败，请全格重装系统，手动更新yum(centos)/apt(ubuntu debian)源后重新执行安装脚本即可。
+* 如果出现安装失败，请全格重装系统，手动更新yum(centos)源后重新执行安装脚本即可。
 
 * Github
 ```shell script
