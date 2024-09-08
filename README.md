@@ -32,7 +32,9 @@ wget --no-check-certificate -O zero.sh https://raw.githubusercontent.com/Shirley
 * 脚本写的很辣鸡，还请大佬多多包涵。
 * 这个版本为Shirley编写!!!
 * 本脚本仅用于学习交流，禁止商业，下载安装后请在24小时内删除！
-* 所有源码全部开源，我个人没有加入任何后门，欢迎检查，不放心的不要用，谢谢大家！
+* 其他文件都开源了，监控文件暂时不考虑开源，怕有后门请直接删除本流控或使用FAS流控~
+* Trojan项目请点击https://github.com/trojan-gfw/trojan
+* 
 
 ## 温馨提醒
 * 脚本资源下载地址请搜索 Download_Host 变量 自行替换！下载地址末尾不加斜杆，否则搭建会报错
@@ -41,7 +43,6 @@ wget --no-check-certificate -O zero.sh https://raw.githubusercontent.com/Shirley
 * 任何问题不要问我，不要问我，不要问我。
 * 任何问题不要问我，不要问我，不要问我。
 * 任何问题不要问我，不要问我，不要问我。
-* 脚本问题请反馈至: xshirleyjones02@gmail.com (仅处理脚本搭建报错问题，Bug等问题。)
 
 
 
