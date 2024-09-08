@@ -1,5 +1,5 @@
-# Zero Panel
-OpenVPN Zero流控|拥有简单的后台管理|仅供个人使用|仅支持CentOS7
+# Zero Panel+Trojan免域名版
+OpenVPN Zero+Trojan免域名版流控|拥有简单的后台管理|仅供个人使用|仅支持CentOS7
 
 ## 准备工作
 * 准备一台服务器 (推荐腾讯云 阿里云 IDC大宽带)
