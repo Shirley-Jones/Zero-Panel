@@ -1,17 +1,12 @@
 # Zero Panel
-OpenVPN Zero流控|拥有简单的后台管理|仅供个人使用|支持Debian、Ubuntu、CentOS
+OpenVPN Zero流控|拥有简单的后台管理|仅供个人使用|仅支持CentOS7
 
 ## 准备工作
 * 准备一台服务器 (推荐腾讯云 阿里云 IDC大宽带)
-* 支持的系统：Debian9+、Ubuntu16+、CentOS7+ (推荐Debian 12)
+* 支持的系统：CentOS7 X64
 * CPU/内存：服务器配置最低0.5核0.5G内存
 * 带宽：推荐5Mbps以上
 * 网络：必须具有固定公网IP（IPV4）
-
-## 版本说明
-* 1.0版本只安装了 OPENVPN，没有其他功能，精简，节省服务器性能，服务器只需要0.5C 0.5G即可带动，适合个人使用。(用户验证文件位于/Zero/user_auth.list 需要自己手动使用编辑器添加用户，后续在更新一键添加的。)
-* 2.0版本安装了 OPENVPN+ZEROPANEL 适合多人使用，因为使用到了数据库服务，需要服务器最低1C1G配置。
-
 
 ## 安装脚本
 * 如果出现安装失败，请全格重装系统，手动更新yum(centos)/apt(ubuntu debian)源后重新执行安装脚本即可。
@@ -19,11 +14,6 @@ OpenVPN Zero流控|拥有简单的后台管理|仅供个人使用|支持Debian�
 * Github
 ```shell script
 wget --no-check-certificate -O zero.sh https://raw.githubusercontent.com/Shirley-Jones/Zero-Panel/main/zero.sh && chmod +x ./zero.sh && ./zero.sh
-```
-
-* Shirley's (Asia HK)
-```shell script
-wget --no-check-certificate -O zero.sh https://api.qiaouu.com/shell/zero_resources/zero.sh && chmod +x ./zero.sh && ./zero.sh
 ```
 
 
