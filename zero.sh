@@ -8,7 +8,7 @@ Download_address_selection()
 	echo
 	echo "请选择下载地址"
 	echo "1、Github"
-	echo "2、Shirley's"
+	echo "2、Shirley's(服务器有效期至2025-02-12 00:00:00)"
 	read -p "请选择[1-2]: " Download_address_Option
 	
 	while [[ ${Download_address_Option} == "" ]]
