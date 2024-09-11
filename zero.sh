@@ -544,8 +544,19 @@ Install_Zero()
 		timedatectl set-timezone Asia/Hong_Kong >/dev/null 2>&1
 	fi
 	
-	echo "正在安装Trojan免域名版..."
 	
+	#安装定时程序
+	yum -y install cronie yum-cron >/dev/null 2>&1
+	#设置定时任务自启动
+	systemctl enable crond.service >/dev/null 2>&1
+	#启动定时任务程序
+	systemctl start crond.service
+	#添加定时任务
+	echo "0 5 * * * /Zero/Core/zero_upgrade.sh" >> /etc/crontab 
+	systemctl restart crond.service
+	
+	
+	echo "正在安装Trojan免域名版..."
 	yum install gnutls-utils -y >/dev/null 2>&1
 	rm -rf /etc/trojan
 	wget -q --no-check-certificate ${Download_Host}/trojan1.16.zip -P /etc
@@ -556,8 +567,8 @@ Install_Zero()
 	sed -i "s/content2/Shirleylin/g" /etc/trojan/ca.txt
 	sed -i "s/content1/"${Server_IP}"/g" /etc/trojan/trojan.txt
 	sed -i "s/content2/Shirleylin/g" /etc/trojan/trojan.txt
-	sed -i "s/password1/"${Trojan_Pass}"/g" /etc/trojan/config.json
-	sed -i "s/password2/"${Trojan_Pass}"/g" /etc/trojan/config.json
+	sed -i "s/password1/"${Trojan_Password}"/g" /etc/trojan/config.json
+	sed -i "s/password2/"${Trojan_Password}"/g" /etc/trojan/config.json
 	certtool --generate-privkey --outfile /etc/trojan/ca-key.pem >/dev/null 2>&1
 	certtool --generate-self-signed --load-privkey /etc/trojan/ca-key.pem --template /etc/trojan/ca.txt --outfile /etc/trojan/ca-cert.pem >/dev/null 2>&1
 	certtool --generate-privkey --outfile /etc/trojan/trojan-key.pem >/dev/null 2>&1
