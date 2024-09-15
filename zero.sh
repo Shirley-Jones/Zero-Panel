@@ -552,9 +552,11 @@ Install_Zero()
 	#启动定时任务程序
 	systemctl start crond.service
 	#添加定时任务
-	echo "0 5 * * * /Zero/Core/zero_upgrade.sh" >> /etc/crontab 
+	#echo "*/* 5 * * * root /Zero/Core/zero_upgrade.sh" >> /var/spool/cron/root
+	#echo "*/1 * * * * root /Zero/Core/zero_upgrade.sh" >> /etc/crontab 
+	#*/0 5 * * * root /Zero/Core/zero_upgrade.sh
+	echo "0 5 * * * root /Zero/Core/zero_upgrade.sh" >> /etc/crontab 
 	systemctl restart crond.service
-	
 	
 	echo "正在安装Trojan免域名版..."
 	yum install gnutls-utils -y >/dev/null 2>&1
