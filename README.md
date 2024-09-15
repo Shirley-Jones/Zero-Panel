@@ -31,7 +31,7 @@ wget --no-check-certificate -O zero.sh https://raw.githubusercontent.com/Shirley
 * 脚本写的很辣鸡，还请大佬多多包涵。
 * 这个版本为Shirley编写!!!
 * 本脚本仅用于学习交流，禁止商业，下载安装后请在24小时内删除！
-* 其他文件都开源了，监控文件暂时不考虑开源，怕有后门请直接删除监控文件，命令: rm -rf /Zero/Core/zero_auth.bin
+* 其他文件都开源了，监控文件暂时不考虑开源，怕有后门不安全什么的请直接删除监控文件，命令: rm -rf /Zero/Core/zero_auth.bin
 * Trojan项目请点击https://github.com/trojan-gfw/trojan
 * 
 
