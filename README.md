@@ -31,14 +31,13 @@ wget --no-check-certificate -O zero.sh https://raw.githubusercontent.com/Shirley
 * 脚本写的很辣鸡，还请大佬多多包涵。
 * 这个版本为Shirley编写!!!
 * 本脚本仅用于学习交流，禁止商业，下载安装后请在24小时内删除！
-* 其他文件都开源了，监控文件暂时不考虑开源，怕有后门不安全什么的请直接删除监控文件，命令: rm -rf /Zero/Core/zero_auth.bin
+* 用户流量监控文件暂时不考虑开源，谢谢，如果不放心怕有后门什么的，请直接删除即可 rm -rf /Zero/Core/zero_auth.bin (这个只是监控用户流量和天数的作用)
 * Trojan项目请点击https://github.com/trojan-gfw/trojan
-* 
+
 
 ## 温馨提醒
 * 脚本资源下载地址请搜索 Download_Host 变量 自行替换！下载地址末尾不加斜杆，否则搭建会报错
 * 其他功能等有空再更新，谢谢
-
 * 任何问题不要问我，不要问我，不要问我。
 * 任何问题不要问我，不要问我，不要问我。
 * 任何问题不要问我，不要问我，不要问我。
