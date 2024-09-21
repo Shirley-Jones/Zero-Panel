@@ -226,21 +226,7 @@ Zero_install_guide()
 		Database_Address="127.0.0.1";
 		Database_Ports="3306";
 		Database_Username="root";
-		OpenVPN_Api=${Server_IP}:${Apache_Port}
 	else
-		echo
-		echo "Tips:"
-		echo "API地址开头不需要添加 http:// 和 https:// 末尾也不需要加斜杆"
-		echo "示例: api.google.com 如果有web端口,请加上web端口,示例: api.google.com:8888"
-		echo "api地址用于用户身份验证,数据库信息用于用户流量监控"
-		echo
-		read -p "请输入API地址: " OpenVPN_Api
-		while [[ ${OpenVPN_Api} == "" ]]
-		do
-			echo -e "\033[31m检测到API地址没有输入,请重新尝试!!!\033[0m"
-			read -p "请输入API地址: " OpenVPN_Api
-		done
-		
 		echo
 		read -p "请输入主机/远程数据库地址: " Database_Address
 		while [[ ${Database_Address} == "" ]]
@@ -271,14 +257,6 @@ Zero_install_guide()
 		do
 			echo -e "\033[31m检测到数据库密码没有输入,请重新尝试!!!\033[0m"
 			read -p "请输入主机/远程数据库密码: " Database_Password
-		done
-		
-		echo
-		read -p "请设置Trojan密码: " Trojan_Password
-		while [[ ${Trojan_Password} == "" ]]
-		do
-			echo -e "\033[31m检测到Trojan密码没有输入,请重新尝试!!!\033[0m"
-			read -p "请设置Trojan密码: " Trojan_Password
 		done
 	fi
 	
@@ -498,9 +476,14 @@ Install_Zero()
 	mv /Zero/Config/sysctl.conf /etc/sysctl.conf
 	sysctl -p >/dev/null 2>&1
 	mv /Zero/api.php /var/www/html/api.php
-	sed -i "s/Communication_password/"${Communication_password}"/g" /Zero/Config/API_Config.php
+	sed -i "s/content1/"${Communication_password}"/g" /Zero/Config/API_Config.php
+	sed -i "s/content1/"${Database_Address}"/g" /Zero/Config/MySQL.php
+	sed -i "s/content2/"${Database_Ports}"/g" /Zero/Config/MySQL.php
+	sed -i "s/content3/"${Database_Username}"/g" /Zero/Config/MySQL.php
+	sed -i "s/content4/"${Database_Password}"/g" /Zero/Config/MySQL.php
+	sed -i "s/content5/"${Server_IP}"/g" /Zero/Config/MySQL.php
+	
 	#修改配置文件
-	sed -i "s/API_ADDRESS/"${OpenVPN_Api}"/g" /Zero/Config/API_Config.php
 	sed -i "s/content1/"${Database_Address}"/g" /Zero/Config/auth_config.conf
 	sed -i "s/content2/"${Database_Ports}"/g" /Zero/Config/auth_config.conf
 	sed -i "s/content3/"${Database_Username}"/g" /Zero/Config/auth_config.conf
