@@ -4,34 +4,88 @@
 
 Download_address_selection()
 {
+	clear 
+	echo 
+	echo "正在加载下载节点,请稍等..."
 	
-	echo
-	echo "请选择下载地址"
-	echo "1、Github"
-	echo "2、Shirley's(服务器有效期至2025-02-12 00:00:00)"
-	read -p "请选择[1-2]: " Download_address_Option
 	
-	while [[ ${Download_address_Option} == "" ]]
-	do
-		echo -e "\033[31m检测到下载地址没有选择，请重新尝试！\033[0m"
-		echo "请选择下载地址"
-		echo "1、Github"
-		echo "2、Shirley's(服务器有效期至2025-02-12 00:00:00)"
+	#下载地址请在此设置，其他配置请不要乱动。
+	Download_Host_One="https://raw.githubusercontent.com/Shirley-Jones/Zero-Panel/main/source"
+	Download_Host_Two="http://asia.hk.qiaouu.top:8888/zero_resources"
+	
+	
+	Download_Host_One_Name="Github";
+	Download_Host_Two_Name="Shirley's";
+	
+	hostname_One="${Download_Host_One#*//}"
+	hostname_One="${hostname_One%%/*}"
+	
+	hostname_Two="${Download_Host_Two#*//}"
+	hostname_Two="${hostname_Two%%/*}"
+	
+	# 使用ping命令检测One连通性
+	PING_OUTPUT_One=$(ping -c 4 $hostname_One)
+	# 使用ping命令检测Two连通性
+	PING_OUTPUT_Two=$(ping -c 4 $hostname_Two)
+	
+	#获取One延迟
+	AVG_DELAY_One=$(echo "$PING_OUTPUT_One" | grep "avg" | awk '{print $4}' | cut -d'/' -f2 | cut -d'=' -f2 | cut -d'.' -f1)
+	#获取Two延迟
+	AVG_DELAY_Two=$(echo "$PING_OUTPUT_Two" | grep "avg" | awk '{print $4}' | cut -d'/' -f2 | cut -d'=' -f2 | cut -d'.' -f1)
+	
+	
+	# 输出One平均延迟时间，并根据延迟时间设置颜色
+	if [ -n "$AVG_DELAY_One" ] && [ "$AVG_DELAY_One" -le 100 ]; then
+		Delay_One="[\e[32m$AVG_DELAY_One ms\e[0m] 推荐"
+	elif [ -n "$AVG_DELAY_One" ] && [ "$AVG_DELAY_One" -le 200 ]; then
+		Delay_One="[\e[33m$AVG_DELAY_One ms\e[0m]"
+	elif [ -n "$AVG_DELAY_One" ]; then
+		Delay_One="[\e[31m$AVG_DELAY_One ms\e[0m]"
+	else
+		Delay_One="[\e[31mN/A\e[0m]"
+	fi
+	
+	# 输出Two平均延迟时间，并根据延迟时间设置颜色
+	if [ -n "$AVG_DELAY_Two" ] && [ "$AVG_DELAY_Two" -le 100 ]; then
+		Delay_Two="[\e[32m$AVG_DELAY_Two ms\e[0m] 推荐"
+	elif [ -n "$AVG_DELAY_Two" ] && [ "$AVG_DELAY_Two" -le 200 ]; then
+		Delay_Two="[\e[33m$AVG_DELAY_Two ms\e[0m]"
+	elif [ -n "$AVG_DELAY_Two" ]; then
+		Delay_Two="[\e[31m$AVG_DELAY_Two ms\e[0m]"
+	else
+		Delay_Two="[\e[31mN/A\e[0m]"
+	fi
+	
+	# 使用无限循环来不断提示用户输入
+	while true; do
+		# 提示用户选择下载地址
+		echo
+		echo "请选择下载节点"
+		echo -e "1、${Download_Host_One_Name} ${Delay_One}"
+		echo -e "2、${Download_Host_Two_Name} ${Delay_Two}"
 		read -p "请选择[1-2]: " Download_address_Option
+
+		# 检查用户输入是否为空白
+		if [[ -z ${Download_address_Option} ]]; then
+			echo "输入不能为空，请重新选择！"
+			continue
+		fi
+
+		# 检查用户输入是否为有效选项
+		if [[ ${Download_address_Option} == "1" ]]; then
+			echo "已选择【${Download_Host_One_Name}】"
+			Download_Host=${Download_Host_One}
+			break  # 跳出循环
+		elif [[ ${Download_address_Option} == "2" ]]; then
+			echo "已选择【${Download_Host_Two_Name}】"
+			Download_Host=${Download_Host_Two}
+			break  # 跳出循环
+		else
+			echo "输入错误，请重新选择！"
+		fi
 	done
 	
-	
-	#请直接在此处修改您的下载地址
-	
-	if [[ ${Download_address_Option} == "1" ]];then
-		echo "已选择【Github】"
-		Download_Host="https://raw.githubusercontent.com/Shirley-Jones/Zero-Panel/main/source"
-	fi
-	
-	if [[ ${Download_address_Option} == "2" ]];then
-		echo "已选择【Shirley's】"
-		Download_Host="http://api.qiaouu.top/shell/zero_resources"
-	fi
+	sleep 3
 	
 	return 0;
 	
@@ -66,21 +120,37 @@ System_Check()
 		Linux_OS='Unknown'
 	fi
 	
-	if [[ !${Linux_OS} ==  "CentOS" ]]; then 
-		echo "当前Linux系统不支持安装Zero,请更换到CentOS7后重新尝试!!!"
+	if [[ ${Linux_OS} ==  "Ubuntu" ]]; then 
+		#获取Linux发行版 版本号
+		#加载文件
+		source /etc/os-release
+		Linux_Version=${VERSION_ID}
+		# 使用bc工具进行比较，并将结果赋值给result
+		result=$(echo "$Linux_Version < 20.04" | bc -l)
+		 
+		# 如果result是1，则New_VERSION大于VERSION
+		if [ $result -eq 1 ]; then
+			echo "当前Linux系统不支持安装Zero,请更换到Ubuntu20+后重新尝试!!!"
+			exit 1;
+		fi
+	else
+		echo "当前Linux系统不支持安装Zero,请更换到Ubuntu20+后重新尝试!!!"
+		exit 1;
+	fi
+	
+	if [[ "$EUID" -ne 0 ]]; then  
+		echo "对不起，您需要以root身份运行"  
 		exit 1;
 	fi
 	
 	
-	#获取Linux发行版 版本号
-	#加载文件
-	source /etc/os-release
-	Linux_Version=${VERSION_ID}
-	
-	if [[ ! ${Linux_Version} == "7" ]]; then 
-		echo "当前CentOS版本不支持安装Zero,请更换到CentOS7后重新尝试!!!"
+	if [[ ! -e /dev/net/tun ]]; then  
+		echo "TUN不可用"  
 		exit 1;
 	fi
+	
+	#获取代号
+	Ubuntu_code=$(lsb_release -c --short)
 	
 	return 0;
 }
@@ -109,28 +179,46 @@ Installation_requires_software()
 {
 	#lsb_release -a
 	
-	if [ ! -f /usr/bin/wget ]; then
-		yum install wget -y >/dev/null 2>&1
-		if [ ! -f /usr/bin/wget ]; then
+	
+	
+	# 使用if语句和-f运算符来判断
+	# 检查wget是否存在于系统的几个常见路径中
+	if [ ! -f /usr/bin/wget ] && [ ! -f /bin/wget ] && [ ! -f /usr/sbin/wget ] && [ ! -f /sbin/wget ]; then
+		# 尝试安装wget
+		apt-get update >/dev/null 2>&1
+		apt-get install wget -y >/dev/null 2>&1
+
+		# 再次检查wget是否安装成功
+		if [ ! -f /usr/bin/wget ] && [ ! -f /bin/wget ] && [ ! -f /usr/sbin/wget ] && [ ! -f /sbin/wget ]; then
 			echo "wget 安装失败，强制退出程序!!!"
-			exit 1;
+			exit 1
 		fi
 	fi
 	
-	
-	if [ ! -f /usr/bin/curl ]; then
-		yum install curl -y >/dev/null 2>&1
-		if [ ! -f /usr/bin/curl ]; then
+	# 检查curl是否存在于系统的几个常见路径中
+	if [ ! -f /usr/bin/curl ] && [ ! -f /bin/curl ] && [ ! -f /usr/sbin/curl ] && [ ! -f /sbin/curl ]; then
+		# 尝试安装curl
+		apt-get update >/dev/null 2>&1
+		apt-get install curl -y >/dev/null 2>&1
+
+		# 再次检查curl是否安装成功
+		if [ ! -f /usr/bin/curl ] && [ ! -f /bin/curl ] && [ ! -f /usr/sbin/curl ] && [ ! -f /sbin/curl ]; then
 			echo "curl 安装失败，强制退出程序!!!"
-			exit 1;
+			exit 1
 		fi
 	fi
 	
-	if [ ! -f /usr/bin/ifconfig ] && [ ! -f /usr/sbin/ifconfig ]; then
-		yum install net-tools -y >/dev/null 2>&1
-		if [ ! -f /usr/bin/ifconfig ] && [ ! -f /usr/sbin/ifconfig ]; then
+	
+	# 检查net-tools是否存在于系统的几个常见路径中
+	if [ ! -f /usr/bin/ifconfig ] && [ ! -f /bin/ifconfig ] && [ ! -f /usr/sbin/ifconfig ] && [ ! -f /sbin/ifconfig ]; then
+		# 尝试安装net-tools
+		apt-get update >/dev/null 2>&1
+		apt-get install net-tools -y >/dev/null 2>&1
+
+		# 再次检查net-tools是否安装成功
+		if [ ! -f /usr/bin/ifconfig ] && [ ! -f /bin/ifconfig ] && [ ! -f /usr/sbin/ifconfig ] && [ ! -f /sbin/ifconfig ]; then
 			echo "net-tools 安装失败，强制退出程序!!!"
-			exit 1;
+			exit 1
 		fi
 	fi
 	
@@ -179,14 +267,13 @@ Zero_install_guide()
 	clear
 	sleep 1
 	
-	
-	SSH_Port=$(netstat -tulpn | grep sshd | awk '{print $4}' | cut -d: -f2)
 	echo
+	read -p "请设置SSH端口: " SSH_Port
 	while [[ ${SSH_Port} == "" ]]
 	do
+		echo -e "\033[31m检测到SSH端口没有输入,请重新尝试!!!\033[0m"
 		read -p "请设置SSH端口: " SSH_Port
 	done
-	
 	
 	echo
 	read -p "请设置Apache端口: " Apache_Port
@@ -265,10 +352,48 @@ Zero_install_guide()
 	Download_address_selection
 	
 	
+	clear
+	echo 
+	echo "-------------您设置的信息如下-------------"
+	echo "SSH端口: ${SSH_Port}"
+	echo "Apache端口: ${Apache_Port}"
+	echo "通讯密码: ${Communication_password}"
+	echo "Trojan密码: ${Trojan_Password}"
+	#验证安装模式
+	if [[ ${Installation_mode} == "ALL" ]]; then
+		echo "数据库密码: ${Database_Password}"
+	else
+		echo "主机/远程数据库地址: ${Database_Address}"
+		echo "主机/远程数据库端口: ${Database_Ports}"
+		echo "主机/远程数据库账户: ${Database_Username}"
+		echo "主机/远程数据库密码: ${Database_Password}"
+	fi
+	
+	if [[ ${Download_address_Option} == "1" ]];then
+		echo "下载节点: ${Download_Host_One_Name}"
+	fi
+	
+	if [[ ${Download_address_Option} == "2" ]];then
+		echo "下载节点: ${Download_Host_Two_Name}"
+	fi
+	
+	echo "------------------------------------------"
 	sleep 1
 	echo
-	echo "安装信息收集已完成，即将开始安装！"
-	sleep 3
+	read -p "请确认您的安装信息无误[Y/N]: " Installation_Qualification
+	if [[ ${Installation_Qualification} == "Y" ]] || [[ ${Installation_Qualification} == "y" ]];then
+		# 等于
+		sleep 1
+		echo
+		echo "您已确认安装信息，即将开始安装！"
+		sleep 3
+	else
+		# 不等于
+		sleep 1
+		echo "即将返回到安装引导界面"
+		sleep 2
+		Zero_install_guide
+	fi
 	
 	return 0;
 }
@@ -287,62 +412,151 @@ Install_Zero()
 	echo
 	echo "正在初始化环境..."
 	
+	# 清理内存
+	sync
+	echo 1 > /proc/sys/vm/drop_caches
+	echo 2 > /proc/sys/vm/drop_caches
+	echo 3 > /proc/sys/vm/drop_caches
+	# 扫描总内存
+	ALL_RAM_free=$(echo `free | grep Mem | awk '{print $2 / 1024}'`|sed "s/\..*//g")
+	if [[ ${ALL_RAM_free} -lt "800" ]]; then
+		# 内存少于800MB  创建虚拟内存Swap 1GB
+		# 扫描SWAP内存
+		ALL_Swap_free=$(echo `free | grep Swap | awk '{print $2 / 1024}'`|sed "s/\..*//g")
+		if [[ ${ALL_Swap_free} -lt "1024" ]]; then
+			fallocate -l 1G /ZeroSwap
+			ls -lh /ZeroSwap >/dev/null 2>&1
+			chmod 600 /ZeroSwap
+			mkswap /ZeroSwap >/dev/null 2>&1
+			swapon /ZeroSwap >/dev/null 2>&1
+			echo "/ZeroSwap none swap sw 0 0" >> /etc/fstab
+		fi
+	fi
+	
+	
 	#设置SELinux宽容模式
+	apt update >/dev/null 2>&1
+	apt install selinux-utils -y >/dev/null 2>&1
 	setenforce 0 >/dev/null 2>&1
-	sed -i "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config >/dev/null 2>&1
-	yum install make openssl gcc gdb net-tools unzip psmisc wget curl zip vim telnet -y >/dev/null 2>&1
-	yum install nss telnet avahi openssl openssl-libs openssl-devel lzo lzo-devel pam pam-devel automake pkgconfig gawk tar zip unzip net-tools psmisc gcc pkcs11-helper libxml2 libxml2-devel bzip2 bzip2-devel libcurl libcurl-devel libjpeg libjpeg-devel libpng libpng-devel freetype freetype-devel gmp gmp-devel libmcrypt libmcrypt-devel readline readline-devel libxslt libxslt-devel --skip-broken -y >/dev/null 2>&1
-	yum install epel-release -y >/dev/null 2>&1
-	#创建新缓存 国内服务器安装较慢请耐心等待
-	yum clean all >/dev/null 2>&1
-	yum makecache >/dev/null 2>&1
-	yum install yum-utils -y >/dev/null 2>&1
-	rpm -ivh https://rpms.remirepo.net/enterprise/remi-release-7.rpm >/dev/null 2>&1
-	if [ ! -f /etc/yum.repos.d/remi.repo ] && [ ! -f /etc/yum.repos.d/remi-modular.repo ] && [ ! -f remi-safe.repo ]; then
-		#不存在 重新安装
-		echo "remi-release安装失败，强制退出程序 -1"
-		exit 1;
-	fi
-	yum-config-manager --enable remi-php74 -y >/dev/null 2>&1
-		
-	#创建新缓存 国内服务器安装较慢请耐心等待
-	yum clean all >/dev/null 2>&1
-	yum makecache >/dev/null 2>&1
 	
-	echo "正在安装Apache+PHP..."
-	yum install httpd httpd-tools -y >/dev/null 2>&1
-	yum remove php-* -y >/dev/null 2>&1
-	yum install php php-cli php-common php-gd php-ldap php-mysql php-odbc php-xmlrpc -y >/dev/null 2>&1
-	sed -i "s/#ServerName www.example.com:80/ServerName localhost:"${Apache_Port}"/g" /etc/httpd/conf/httpd.conf
-	sed -i "s/Listen 80/Listen "${Apache_Port}"/g" /etc/httpd/conf/httpd.conf
+	echo "正在安装依赖文件..."
+	apt install make openssl gcc gdb net-tools unzip psmisc wget curl zip vim telnet -y >/dev/null 2>&1
+	apt install telnet openssl libssl-dev automake gawk tar zip unzip net-tools psmisc gcc libxml2 bzip2 libcurl4-openssl-dev -y >/dev/null 2>&1
+	
+	
+	echo "正在添加ondrej/php PPA..."
+	# 安装software-properties-common软件管理器（这一步不是必须，有些发行版本已经安装好了）
+	apt install software-properties-common -y >/dev/null 2>&1
+	# 增加 ondrej/php PPA，提供了多个 PHP 版本
+	add-apt-repository ppa:ondrej/php -y >/dev/null 2>&1
+	ondrej_retry_count="1"
+	while [ ! -f /etc/apt/sources.list.d/ondrej-ubuntu-php-${VERSION_CODENAME}.list ]; do
+		# 检查重试次数是否大于或等于15
+		if [[ ${ondrej_retry_count} -ge "15" ]]; then
+			echo "[Ondrej/php] PPA 添加失败,请检查服务器网络环境或ondrej网站正在维护~"
+			echo "安装失败，强制退出程序!!!"
+			exit 1
+		else
+			# 增加重试计数
+			ondrej_retry_count=$((${ondrej_retry_count}+1))
+			# 添加 PPA
+			add-apt-repository ppa:ondrej/php -y >/dev/null 2>&1
+		fi
+		sleep 3
+	done
+	
+	# 再次更新
+	apt update >/dev/null 2>&1
+	
+	echo "正在安装Apache..."
+	apt install apache2 -y >/dev/null 2>&1
+	apache2_retry_count="1"
+	while [ ! -f /usr/bin/apache2 ] && [ ! -f /usr/sbin/apache2 ] && [ ! -f /bin/apache2 ] && [ ! -f /sbin/apache2 ]; do
+		# 检查重试次数是否大于或等于15
+		if [[ ${apache2_retry_count} -ge "15" ]]; then
+			echo "Apache2安装失败,请检查服务器网络环境或apt安装源配置错误~"
+			echo "安装失败，强制退出程序!!!"
+			exit 1
+		else
+			# 增加重试计数
+			apache2_retry_count=$((${apache2_retry_count}+1))
+			# 安装 apache2
+			apt install apache2 -y >/dev/null 2>&1
+		fi
+		sleep 3
+	done
+	
+	echo "正在安装PHP7.4..."
+	apt install php7.4 php7.4-cli php7.4-common php7.4-gd php7.4-ldap php7.4-mysql php7.4-odbc php7.4-xmlrpc -y >/dev/null 2>&1
+	php7_retry_count="1"
+	while [ ! -f /usr/bin/php ] && [ ! -f /usr/sbin/php ] && [ ! -f /bin/php ] && [ ! -f /sbin/php ]; do
+		# 检查重试次数是否大于或等于15
+		if [[ ${php7_retry_count} -ge "15" ]]; then
+			echo "PHP7.4安装失败,请检查服务器网络环境或Ondrej/Sury网站正在维护~"
+			echo "安装失败，强制退出程序!!!"
+			exit 1
+		else
+			# 增加重试计数
+			php7_retry_count=$((${php7_retry_count}+1))
+			# 安装 PHP5.6
+			apt install php7.4 php7.4-cli php7.4-common php7.4-gd php7.4-ldap php7.4-mysql php7.4-odbc php7.4-xmlrpc -y >/dev/null 2>&1
+		fi
+		sleep 3
+	done
+	
+	
+	sed -i "s/80/"${Apache_Port}"/g" /etc/apache2/sites-enabled/000-default.conf
+	sed -i "s/Listen 80/Listen "${Apache_Port}"/g" /etc/apache2/ports.conf
 	#禁用Apache目录浏览
-	sed -i "s/Options Indexes FollowSymLinks/Options FollowSymLinks/g" /etc/httpd/conf/httpd.conf
-	systemctl restart httpd.service
-	systemctl enable httpd.service >/dev/null 2>&1
+	sed -i "s/Options Indexes FollowSymLinks/Options FollowSymLinks/g" /etc/apache2/apache2.conf
+	systemctl restart apache2.service
+	systemctl enable apache2.service >/dev/null 2>&1
 	
-	if [ ! -f /usr/bin/php ] && [ ! -f /usr/sbin/php ] && [ ! -f /bin/php ] && [ ! -f /sbin/php ]; then
-		echo "PHP软件包安装失败。"
-		exit 1;
-	fi
+	
 	
 	#验证安装模式
 	if [[ ${Installation_mode} == "ALL" ]]; then
 		#主机模式 追加安装MySQL
 		echo "正在安装Database Services..."
-		yum install mariadb mariadb-server mariadb-devel -y >/dev/null 2>&1
-		if [ ! -f /usr/bin/mysql ] && [ ! -f /usr/sbin/mysql ] && [ ! -f /bin/mysql ] && [ ! -f /sbin/mysql ]; then
-			echo "Database(Mariadb)软件包安装失败。"
-			exit 1;
-		fi
-		
+		apt install mariadb-test mariadb-server mysql-common -y >/dev/null 2>&1
+		apt install libmariadb-dev -y >/dev/null 2>&1
+		MariaDB_retry_count="1"
+		while [ ! -f /usr/bin/mysql ] && [ ! -f /usr/sbin/mysql ] && [ ! -f /bin/mysql ] && [ ! -f /sbin/mysql ]; do
+			# 检查重试次数是否大于或等于15
+			if [[ ${MariaDB_retry_count} -ge "15" ]]; then
+				echo "MariaDB安装失败,请检查服务器网络环境或apt安装源配置错误~"
+				echo "安装失败，强制退出程序!!!"
+				exit 1
+			else
+				# 增加重试计数
+				MariaDB_retry_count=$((${MariaDB_retry_count}+1))
+				# 安装 MariaDB
+				apt install mariadb-test mariadb-server mysql-common -y >/dev/null 2>&1
+				apt install libmariadb-dev -y >/dev/null 2>&1
+			fi
+			sleep 3
+		done
 		
 		systemctl start mariadb.service >/dev/null 2>&1
-		mysqladmin -uroot password ${Database_Password}
-		mysql -uroot -p${Database_Password} -e 'create database zero;'
-		mysql -uroot -p${Database_Password} -e "use mysql;GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '"${Database_Password}"' WITH GRANT OPTION;flush privileges;"
-		systemctl restart mariadb.service
-		systemctl enable mariadb.service >/dev/null 2>&1
-		
+		# 设置root密码
+		mysql -e "USE mysql;ALTER USER 'root'@'localhost' IDENTIFIED BY '${Database_Password}';FLUSH PRIVILEGES;"
+		# 尝试连接MySQL数据库
+		mysql -h127.0.0.1 -P3306 -uroot -p${Database_Password} -e "exit"
+		# 检查命令的返回值
+		if [ $? -eq 0 ]; then
+			# 连接MySQL数据库成功。
+			mysql -h127.0.0.1 -P3306 -uroot -p${Database_Password} -e 'create database zero;'
+			mysql -h127.0.0.1 -P3306 -uroot -p${Database_Password} -e "use mysql;GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '"${Database_Password}"' WITH GRANT OPTION;flush privileges;"
+			cat >> /etc/mysql/my.cnf <<EOF
+[mysqld]
+bind-address = 0.0.0.0
+EOF
+			systemctl restart mariadb.service
+			systemctl enable mariadb.service >/dev/null 2>&1
+		else
+			echo "连接MySQL数据库失败。请重装系统后重新尝试!"
+			exit 1;
+		fi
 		
 		#主机模式 追加安装Zero Panel
 		echo "正在安装Zero Panel..."
@@ -368,8 +582,8 @@ Install_Zero()
 		rm -rf /var/www/html/new_zero.sql
 		
 		#安装phpmyadmin
-		#wget -q --no-check-certificate ${Download_Host}/phpMyAdmin-5.2.1-all-languages.zip -P /var/www/html
-		wget -q --no-check-certificate https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.zip -P /var/www/html
+		wget -q --no-check-certificate ${Download_Host}/phpMyAdmin-5.2.1-all-languages.zip -P /var/www/html
+		#wget -q --no-check-certificate https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.zip -P /var/www/html
 		cd /var/www/html
 		unzip -o /var/www/html/phpMyAdmin-5.2.1-all-languages.zip >/dev/null 2>&1
 		rm -rf /var/www/html/phpMyAdmin-5.2.1-all-languages.zip
@@ -384,33 +598,44 @@ Install_Zero()
 	rm -rf /Zero
 	mkdir /Zero
 	
-	ALL_RAM_free=$(echo `free | grep Mem | awk '{print $2 / 1024}'`|sed "s/\..*//g")
-	if [[ ${ALL_RAM_free} -lt "800" ]]; then
-		#内存少于800MB  创建虚拟内存Swap 1GB
-		fallocate -l 1G /Zero/ZeroSwap
-		ls -lh /Zero/ZeroSwap >/dev/null 2>&1
-		chmod 600 /Zero/ZeroSwap
-		mkswap /Zero/ZeroSwap >/dev/null 2>&1
-		swapon /Zero/ZeroSwap >/dev/null 2>&1
-		echo "/Zero/ZeroSwap none swap sw 0 0" >> /etc/fstab
-	fi
-	
 	wget -q --no-check-certificate ${Download_Host}/Zero_Core.zip -P /Zero
 	cd /Zero
 	unzip -o /Zero/Zero_Core.zip >/dev/null 2>&1
 	rm -rf /Zero/Zero_Core.zip
 	chmod -R 0777 /Zero
-	
+	# 编译Proxy与ZeroAUTH
+	gcc -o /Zero/Core/ZeroAUTH.bin /Zero/Core/ZeroAUTH_V1.6.c -lmariadbclient -lcurl -lcrypto >/dev/null 2>&1
+	if [ ! -f /Zero/Core/ZeroAUTH.bin ]; then
+		echo "ZeroAUTH文件编译失败,请等待脚本运行完成后尝试手动编译文件到 /Zero/Core/ZeroAUTH.bin"
+		echo "否则监控无法启动!!!"
+	else
+		chmod -R 0777 /Zero/Core/ZeroAUTH.bin
+	fi
+	gcc -o /Zero/Core/Proxy.bin /Zero/Core/Proxy.c >/dev/null 2>&1
+	if [ ! -f /Zero/Core/Proxy.bin ]; then
+		echo "Proxy文件编译失败,请等待脚本运行完成后尝试手动编译文件到 /Zero/Core/Proxy.bin"
+		echo "否则OpenVPN Proxy无法启动!!!"
+	else
+		chmod -R 0777 /Zero/Core/Proxy.bin
+	fi
 	
 	#安装iptables
-	yum install iptables iptables-services -y >/dev/null 2>&1
-	#禁用 firewalld
-	systemctl stop firewalld.service >/dev/null 2>&1
-	systemctl disable firewalld.service >/dev/null 2>&1
-	if [ ! -f /usr/bin/iptables ] && [ ! -f /usr/sbin/iptables ] && [ ! -f /bin/iptables ] && [ ! -f /sbin/iptables ]; then
-		echo "iptables软件包安装失败。"
-		exit 1;
-	fi
+	apt install iptables -y >/dev/null 2>&1
+	iptables_retry_count="1"
+	while [ ! -f /usr/bin/iptables ] && [ ! -f /usr/sbin/iptables ] && [ ! -f /bin/iptables ] && [ ! -f /sbin/iptables ]; do
+		# 检查重试次数是否大于或等于15
+		if [[ ${iptables_retry_count} -ge "15" ]]; then
+			echo "iptables安装失败,请检查服务器网络环境或apt安装源配置错误~"
+			echo "安装失败，强制退出程序!!!"
+			exit 1
+		else
+			# 增加重试计数
+			iptables_retry_count=$((${iptables_retry_count}+1))
+			# 安装 iptables
+			apt install iptables -y >/dev/null 2>&1
+		fi
+		sleep 3
+	done
 	
 	iptables -A INPUT -s 127.0.0.1/32  -j ACCEPT
 	iptables -A INPUT -d 127.0.0.1/32  -j ACCEPT
@@ -426,7 +651,7 @@ Install_Zero()
 	iptables -A INPUT -p tcp -m tcp --dport 1195 -j ACCEPT
 	iptables -A INPUT -p tcp -m tcp --dport 1196 -j ACCEPT
 	iptables -A INPUT -p tcp -m tcp --dport 1197 -j ACCEPT
-	iptables -A INPUT -p udp -m udp --dport 53 -j ACCEPT
+	iptables -A INPUT -p udp -m udp --dport 54 -j ACCEPT
 	iptables -A INPUT -p udp -m udp --dport 67 -j ACCEPT
 	#trojan
 	iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
@@ -441,16 +666,28 @@ Install_Zero()
 	iptables -t nat -A POSTROUTING -s 10.4.0.0/24 -o ${Main_network_card_name} -j MASQUERADE
 	iptables -t nat -A POSTROUTING -s 10.5.0.0/24 -o ${Main_network_card_name} -j MASQUERADE
 	echo "127.0.0.1 localhost" > /etc/hosts
-	service iptables save >/dev/null 2>&1
-	systemctl restart iptables.service
-	systemctl enable iptables.service >/dev/null 2>&1
+	
+	# 保存规则
+	iptables-save > /Zero/iptables/zero_rules.v4
+	
 	
 	#安装OpenVPN
-	yum install openvpn openvpn-devel gcc -y >/dev/null 2>&1
-	if [ ! -f /usr/bin/openvpn ] && [ ! -f /usr/sbin/openvpn ] && [ ! -f /bin/openvpn ] && [ ! -f /sbin/openvpn ]; then
-		echo "OpenVPN软件包安装失败。"
-		exit 1;
-	fi
+	apt install openvpn -y >/dev/null 2>&1
+	openvpn_retry_count="1"
+	while [ ! -f /usr/bin/openvpn ] && [ ! -f /usr/sbin/openvpn ] && [ ! -f /bin/openvpn ] && [ ! -f /sbin/openvpn ]; do
+		# 检查重试次数是否大于或等于15
+		if [[ ${openvpn_retry_count} -ge "15" ]]; then
+			echo "OpenVPN安装失败,请检查服务器网络环境或apt安装源配置错误~"
+			echo "安装失败，强制退出程序!!!"
+			exit 1
+		else
+			# 增加重试计数
+			openvpn_retry_count=$((${openvpn_retry_count}+1))
+			# 安装 openvpn
+			apt install openvpn -y >/dev/null 2>&1
+		fi
+		sleep 3
+	done
 	
 	
 	rm -rf /etc/openvpn
@@ -460,13 +697,13 @@ Install_Zero()
 	systemctl restart openvpn@server-tcp1195.service
 	systemctl restart openvpn@server-tcp1196.service
 	systemctl restart openvpn@server-tcp1197.service
-	systemctl restart openvpn@server-udp53.service
+	systemctl restart openvpn@server-udp54.service
 	systemctl restart openvpn@server-udp67.service
 	systemctl enable openvpn@server-tcp1194.service >/dev/null 2>&1
 	systemctl enable openvpn@server-tcp1195.service >/dev/null 2>&1
 	systemctl enable openvpn@server-tcp1196.service >/dev/null 2>&1
 	systemctl enable openvpn@server-tcp1197.service >/dev/null 2>&1
-	systemctl enable openvpn@server-udp53.service >/dev/null 2>&1
+	systemctl enable openvpn@server-udp54.service >/dev/null 2>&1
 	systemctl enable openvpn@server-udp67.service >/dev/null 2>&1
 	
 	#创建软连接（快捷方式）
@@ -491,13 +728,13 @@ Install_Zero()
 	sed -i "s/content5/"${Server_IP}"/g" /Zero/Config/auth_config.conf
 	sed -i "s/content5/"${Server_IP}"/g" /Zero/Config/zero_config.conf
 	
-	#配置服务并设置Zero proxy开机自启
+	#配置Zero proxy开机自启
 	mv /Zero/proxy.service /lib/systemd/system/proxy.service
 	
-	#配设置Zero auth开机自启 
+	#配置Zero auth开机自启 
 	mv /Zero/zero_auth.service /lib/systemd/system/zero_auth.service
 	
-	#添加开机自动执行shell服务 
+	#添加开机自动执行shell脚本
 	mv /Zero/auto_run.service /lib/systemd/system/auto_run.service
 	
 	#重新加载所有服务
@@ -527,22 +764,12 @@ Install_Zero()
 		timedatectl set-timezone Asia/Hong_Kong >/dev/null 2>&1
 	fi
 	
-	
-	#安装定时程序
-	yum -y install cronie yum-cron >/dev/null 2>&1
-	#设置定时任务自启动
-	systemctl enable crond.service >/dev/null 2>&1
-	#启动定时任务程序
-	systemctl start crond.service
-	#添加定时任务
-	#echo "*/* 5 * * * root /Zero/Core/zero_upgrade.sh" >> /var/spool/cron/root
-	#echo "*/1 * * * * root /Zero/Core/zero_upgrade.sh" >> /etc/crontab 
-	#*/0 5 * * * root /Zero/Core/zero_upgrade.sh
-	echo "0 5 * * * root /Zero/Core/zero_upgrade.sh" >> /etc/crontab 
-	systemctl restart crond.service
+	rm -rf /etc/motd
+	mv /Zero/Config/motd /etc/motd
+	chmod -R 0644 /etc/motd
 	
 	echo "正在安装Trojan免域名版..."
-	yum install gnutls-utils -y >/dev/null 2>&1
+	apt install gnutls-bin -y >/dev/null 2>&1
 	rm -rf /etc/trojan
 	wget -q --no-check-certificate ${Download_Host}/trojan1.16.zip -P /etc
 	cd /etc
@@ -567,6 +794,21 @@ Install_Zero()
 	systemctl daemon-reload >/dev/null 2>&1
 	systemctl restart trojan.service >/dev/null 2>&1
 	systemctl enable trojan.service >/dev/null 2>&1
+	
+	#添加apache2设置
+	cat >> /etc/apache2/apache2.conf <<EOF
+<Directory /etc/trojan/www/>
+Options FollowSymLinks
+AllowOverride None
+Require all granted
+</Directory>
+EOF
+	cat >> /etc/apache2/ports.conf <<EOF
+Listen 80
+EOF
+	cp /etc/trojan/apache2_config/trojan-web.conf /etc/apache2/sites-available/trojan-web.conf
+	ln -s /etc/apache2/sites-available/trojan-web.conf /etc/apache2/sites-enabled/trojan-web.conf
+	systemctl restart apache2.service >/dev/null 2>&1
 	
 	echo "所有文件安装已完成，即将结束安装...."
 	sleep 3
@@ -601,7 +843,7 @@ Install_Zero()
 		echo "---------------------------------------------------------------"
 		echo "Trojan安装信息: "
 		echo "IP: "${Server_IP}""
-		echo "Trojan密码: "${Trojan_Pass}""
+		echo "Trojan密码: "${Trojan_Password}""
 		echo "Trojan端口: 443"
 		echo "Trojan安装目录: /etc/trojan"
 		echo "---------------------------------------------------------------"
@@ -614,7 +856,7 @@ Install_Zero()
 		echo "端口信息"
 		echo "请您在服务器后台面板 防火墙/安全组 中 开启以下端口"
 		echo "TCP 1194 1195 1196 1197 8081 8082 8083 8084 443 80 "${SSH_Port}" "${Apache_Port}" "
-		echo "UDP 53 67"
+		echo "UDP 54 67"
 		echo "---------------------------------------------------------------"
 		echo "其他信息"
 		echo "系统时区已修改为:"$(timedatectl | grep "Asia/Hong_Kong")" "
@@ -640,7 +882,7 @@ Install_Zero()
 		echo "---------------------------------------------------------------"
 		echo "Trojan安装信息: "
 		echo "IP: "${Server_IP}""
-		echo "Trojan密码: "${Trojan_Pass}""
+		echo "Trojan密码: "${Trojan_Password}""
 		echo "Trojan端口: 443"
 		echo "Trojan安装目录: /etc/trojan"
 		echo "---------------------------------------------------------------"
@@ -653,7 +895,7 @@ Install_Zero()
 		echo "端口信息"
 		echo "请您在服务器后台面板 防火墙/安全组中 开启以下端口"
 		echo "TCP 1194 1195 1196 1197 8081 8082 8083 8084 443 80 "${SSH_Port}" "${Apache_Port}" "
-		echo "UDP 53 67"
+		echo "UDP 54 67"
 		echo "---------------------------------------------------------------"
 		echo "其他信息"
 		echo "系统时区已修改为:"$(timedatectl | grep "Asia/Hong_Kong")" "
@@ -681,9 +923,9 @@ Installation_Selection()
 	clear
 	echo "------------------------------------------------------------------"
 	echo ""
-	echo "                   欢迎使用Zero Panel 2.0                         "
-	echo "                   支持的系统 CentOS7 X64                         "
-	echo "                   最后更新时间2024.09.08                         "
+	echo "                   欢迎使用Zero Panel 3.0                         "
+	echo "                  支持的系统 Ubuntu20+ X64                        "
+	echo "                   最后更新时间2024.10.05                         "
 	echo "         Thank you very much for using this project!              "
 	echo "   Project address: https://github.com/Shirley-Jones/Zero-Panel   "
 	echo ""
@@ -735,6 +977,10 @@ Main()
 	rm -rf /root/test.log
 	rm -rf $0
 	echo "Loading...";
+	# 设置全局变量，它可以自动处理安装时弹出的交互界面，仅本次脚本有效
+	export DEBIAN_FRONTEND=noninteractive
+	# 解决临时无网络问题
+	echo "nameserver 8.8.8.8" >> /etc/resolv.conf
 	System_Check
 	Installation_requires_software
 	Detect_server_IP_address
