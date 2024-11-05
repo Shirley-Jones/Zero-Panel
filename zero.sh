@@ -11,7 +11,7 @@ Download_address_selection()
 	
 	#下载地址请在此设置，其他配置请不要乱动。
 	Download_Host_One="https://raw.githubusercontent.com/Shirley-Jones/Zero-Panel/main/source"
-	Download_Host_Two="http://asia.hk.qiaouu.top:8888/zero_resources"
+	Download_Host_Two="http://8.210.247.123:8888/zero_resources"
 	
 	
 	Download_Host_One_Name="Github";
@@ -291,16 +291,6 @@ Zero_install_guide()
 		read -p "请设置通讯密码: " Communication_password
 	done
 	
-	
-	echo
-	read -p "请设置Trojan密码: " Trojan_Password
-	while [[ ${Trojan_Password} == "" ]]
-	do
-		echo -e "\033[31m检测到Trojan密码没有输入,请重新尝试!!!\033[0m"
-		read -p "请设置Trojan密码: " Trojan_Password
-	done
-	
-	
 	#验证安装模式
 	if [[ ${Installation_mode} == "ALL" ]]; then
 		echo
@@ -358,7 +348,6 @@ Zero_install_guide()
 	echo "SSH端口: ${SSH_Port}"
 	echo "Apache端口: ${Apache_Port}"
 	echo "通讯密码: ${Communication_password}"
-	echo "Trojan密码: ${Trojan_Password}"
 	#验证安装模式
 	if [[ ${Installation_mode} == "ALL" ]]; then
 		echo "数据库密码: ${Database_Password}"
@@ -441,7 +430,7 @@ Install_Zero()
 	
 	echo "正在安装依赖文件..."
 	apt install make openssl gcc gdb net-tools unzip psmisc wget curl zip vim telnet -y >/dev/null 2>&1
-	apt install telnet openssl libssl-dev automake gawk tar zip unzip net-tools psmisc gcc libxml2 bzip2 libcurl4-openssl-dev -y >/dev/null 2>&1
+	apt install telnet openssl libssl-dev automake gawk tar zip unzip net-tools psmisc gcc libxml2 bzip2 libcurl4-openssl-dev libboost-all-dev -y >/dev/null 2>&1
 	
 	
 	echo "正在添加ondrej/php PPA..."
@@ -509,17 +498,19 @@ Install_Zero()
 	sed -i "s/Listen 80/Listen "${Apache_Port}"/g" /etc/apache2/ports.conf
 	#禁用Apache目录浏览
 	sed -i "s/Options Indexes FollowSymLinks/Options FollowSymLinks/g" /etc/apache2/apache2.conf
+	#启用 a2enmod headers
+	a2enmod headers >/dev/null 2>&1
+	sed -i '/<Directory \/>/a\Header set Access-Control-Allow-Origin "*"' /etc/apache2/apache2.conf
 	systemctl restart apache2.service
 	systemctl enable apache2.service >/dev/null 2>&1
-	
-	
 	
 	#验证安装模式
 	if [[ ${Installation_mode} == "ALL" ]]; then
 		#主机模式 追加安装MySQL
 		echo "正在安装Database Services..."
 		apt install mariadb-test mariadb-server mysql-common -y >/dev/null 2>&1
-		apt install libmariadb-dev -y >/dev/null 2>&1
+		#apt install libmariadb-dev -y >/dev/null 2>&1
+		apt install libmysqlclient-dev -y
 		MariaDB_retry_count="1"
 		while [ ! -f /usr/bin/mysql ] && [ ! -f /usr/sbin/mysql ] && [ ! -f /bin/mysql ] && [ ! -f /sbin/mysql ]; do
 			# 检查重试次数是否大于或等于15
@@ -532,7 +523,8 @@ Install_Zero()
 				MariaDB_retry_count=$((${MariaDB_retry_count}+1))
 				# 安装 MariaDB
 				apt install mariadb-test mariadb-server mysql-common -y >/dev/null 2>&1
-				apt install libmariadb-dev -y >/dev/null 2>&1
+				#apt install libmariadb-dev -y >/dev/null 2>&1
+				apt install libmysqlclient-dev -y
 			fi
 			sleep 3
 		done
@@ -604,7 +596,10 @@ EOF
 	rm -rf /Zero/Zero_Core.zip
 	chmod -R 0777 /Zero
 	# 编译Proxy与ZeroAUTH
-	gcc -o /Zero/Core/ZeroAUTH.bin /Zero/Core/ZeroAUTH_V1.6.c -lmariadbclient -lcurl -lcrypto >/dev/null 2>&1
+	#解决节点版本编译失败问题
+	#apt install libmariadb-dev -y >/dev/null 2>&1
+	apt install libmysqlclient-dev -y
+	gcc -o /Zero/Core/ZeroAUTH.bin /Zero/Core/ZeroAUTH_V1.6.c -lmysqlclient -lcurl -lcrypto >/dev/null 2>&1
 	if [ ! -f /Zero/Core/ZeroAUTH.bin ]; then
 		echo "ZeroAUTH文件编译失败,请等待脚本运行完成后尝试手动编译文件到 /Zero/Core/ZeroAUTH.bin"
 		echo "否则监控无法启动!!!"
@@ -617,6 +612,24 @@ EOF
 		echo "否则OpenVPN Proxy无法启动!!!"
 	else
 		chmod -R 0777 /Zero/Core/Proxy.bin
+	fi
+	
+	#编译Rate
+	gcc -o /Zero/Core/Rate.bin /Zero/Core/Rate.c >/dev/null 2>&1
+	if [ ! -f /Zero/Core/Rate.bin ]; then
+		echo "Rate文件编译失败,请等待脚本运行完成后尝试手动编译文件到 /Zero/Core/Rate.bin"
+		echo "否则Rate无法启动!!!"
+	else
+		chmod -R 0777 /Zero/Core/Rate.bin
+	fi
+	
+	#编译Socket
+	gcc -o /Zero/Core/Socket.bin /Zero/Core/Socket.c >/dev/null 2>&1
+	if [ ! -f /Zero/Core/Socket.bin ]; then
+		echo "Socket文件编译失败,请等待脚本运行完成后尝试手动编译文件到 /Zero/Core/Socket.bin"
+		echo "否则Socket无法启动!!!"
+	else
+		chmod -R 0777 /Zero/Core/Socket.bin
 	fi
 	
 	#安装iptables
@@ -727,23 +740,32 @@ EOF
 	sed -i "s/content4/"${Database_Password}"/g" /Zero/Config/auth_config.conf
 	sed -i "s/content5/"${Server_IP}"/g" /Zero/Config/auth_config.conf
 	sed -i "s/content5/"${Server_IP}"/g" /Zero/Config/zero_config.conf
-	
-	#配置Zero proxy开机自启
+	#配置Zero proxy服务
 	mv /Zero/proxy.service /lib/systemd/system/proxy.service
 	
-	#配置Zero auth开机自启 
+	#配置Zero auth服务 
 	mv /Zero/zero_auth.service /lib/systemd/system/zero_auth.service
 	
-	#添加开机自动执行shell脚本
+	#配置Zero rate服务
+	mv /Zero/rate.service /lib/systemd/system/rate.service
+	
+	#配置Zero socket服务
+	mv /Zero/socket.service /lib/systemd/system/socket.service
+	
+	#配置开机自动执行shell脚本
 	mv /Zero/auto_run.service /lib/systemd/system/auto_run.service
 	
 	#重新加载所有服务
 	systemctl daemon-reload >/dev/null 2>&1
 	#启动服务
+	systemctl start socket.service >/dev/null 2>&1
+	systemctl start rate.service >/dev/null 2>&1
 	systemctl start zero_auth.service >/dev/null 2>&1
 	systemctl start auto_run.service >/dev/null 2>&1
 	systemctl restart proxy.service >/dev/null 2>&1
 	#设置开机自启
+	systemctl enable socket.service >/dev/null 2>&1
+	systemctl enable rate.service >/dev/null 2>&1
 	systemctl enable zero_auth.service >/dev/null 2>&1
 	systemctl enable auto_run.service >/dev/null 2>&1
 	systemctl enable proxy.service >/dev/null 2>&1
@@ -764,6 +786,7 @@ EOF
 		timedatectl set-timezone Asia/Hong_Kong >/dev/null 2>&1
 	fi
 	
+	#修改SSH登录界面欢迎词
 	rm -rf /etc/motd
 	mv /Zero/Config/motd /etc/motd
 	chmod -R 0644 /etc/motd
@@ -771,21 +794,22 @@ EOF
 	echo "正在安装Trojan免域名版..."
 	apt install gnutls-bin -y >/dev/null 2>&1
 	rm -rf /etc/trojan
-	wget -q --no-check-certificate ${Download_Host}/trojan1.16.zip -P /etc
-	cd /etc
-	unzip -o /etc/trojan1.16.zip >/dev/null 2>&1
-	rm -rf /etc/trojan1.16.zip
+	mv /Zero/trojan /etc/trojan
+	#编辑配置文件
 	sed -i "s/content1/"${Server_IP}"/g" /etc/trojan/ca.txt
 	sed -i "s/content2/Shirleylin/g" /etc/trojan/ca.txt
 	sed -i "s/content1/"${Server_IP}"/g" /etc/trojan/trojan.txt
 	sed -i "s/content2/Shirleylin/g" /etc/trojan/trojan.txt
-	sed -i "s/password1/"${Trojan_Password}"/g" /etc/trojan/config.json
-	sed -i "s/password2/"${Trojan_Password}"/g" /etc/trojan/config.json
+	sed -i "s/content1/"${Database_Address}"/g" /etc/trojan/config.json
+	sed -i "s/content2/"${Database_Ports}"/g" /etc/trojan/config.json
+	sed -i "s/content3/"${Database_Username}"/g" /etc/trojan/config.json
+	sed -i "s/content4/"${Database_Password}"/g" /etc/trojan/config.json
 	certtool --generate-privkey --outfile /etc/trojan/ca-key.pem >/dev/null 2>&1
 	certtool --generate-self-signed --load-privkey /etc/trojan/ca-key.pem --template /etc/trojan/ca.txt --outfile /etc/trojan/ca-cert.pem >/dev/null 2>&1
 	certtool --generate-privkey --outfile /etc/trojan/trojan-key.pem >/dev/null 2>&1
 	certtool --generate-certificate --load-privkey /etc/trojan/trojan-key.pem --load-ca-certificate /etc/trojan/ca-cert.pem --load-ca-privkey /etc/trojan/ca-key.pem --template /etc/trojan/trojan.txt --outfile /etc/trojan/trojan-cert.pem >/dev/null 2>&1
 	mv /etc/trojan/trojan.service /usr/lib/systemd/system/trojan.service
+	# 添加trojan用户并设置相关权限
 	groupadd -g 12345 trojan >/dev/null 2>&1
 	useradd -g 12345 -s /usr/sbin/nologin trojan >/dev/null 2>&1
 	chown -R trojan:trojan /etc/trojan >/dev/null 2>&1
@@ -794,6 +818,7 @@ EOF
 	systemctl daemon-reload >/dev/null 2>&1
 	systemctl restart trojan.service >/dev/null 2>&1
 	systemctl enable trojan.service >/dev/null 2>&1
+	
 	
 	#添加apache2设置
 	cat >> /etc/apache2/apache2.conf <<EOF
@@ -825,15 +850,14 @@ EOF
 		echo "您的Zero系统安装完成，以下是您的安装信息"
 		echo "---------------------------------------------------------------"
 		echo "OpenVPN安装信息: "
-		echo "后台面板: http://"${Server_IP}":"${Apache_Port}"/admin"
+		echo "后台管理: http://"${Server_IP}":"${Apache_Port}"/admin"
 		echo "账户: admin  密码: admin"
-		echo "用户账户面板: http://"${Server_IP}":"${Apache_Port}"/user"
+		echo "用户中心: http://"${Server_IP}":"${Apache_Port}"/user"
+		echo "Trojan用户中心: http://"${Server_IP}":"${Apache_Port}"/t_query"
 		echo "数据库管理: http://"${Server_IP}":"${Apache_Port}"/phpMyAdmin"
 		echo "数据库账户: root  数据库密码: "${Database_Password}""
 		echo "服务器证书密钥与线路文件下载: http://"${Server_IP}":"${Apache_Port}"/Zero_certificates_and_keys.zip"
 		echo "服务器通讯密码: "${Communication_password}""
-		echo "服务器PHP已经开启System Shell高级指令，请务必保管好您的通讯密码。"
-		echo "Zero没有加盟商/代理后台管理系统，仅供个人非商业性使用，请您须知！"
 		echo "---------------------------------------------------------------"
 		echo "Zero命令信息"
 		echo "Zero服务管理命令: zero restart/start/stop/state"
@@ -843,15 +867,7 @@ EOF
 		echo "---------------------------------------------------------------"
 		echo "Trojan安装信息: "
 		echo "IP: "${Server_IP}""
-		echo "Trojan密码: "${Trojan_Password}""
 		echo "Trojan端口: 443"
-		echo "Trojan安装目录: /etc/trojan"
-		echo "---------------------------------------------------------------"
-		echo "Trojan命令信息"
-		echo "Trojan启动: systemctl start trojan.service"
-		echo "Trojan停止: systemctl stop trojan.service"
-		echo "Trojan重启: systemctl restart trojan.service"
-		echo "Trojan状态: systemctl status trojan.service"
 		echo "---------------------------------------------------------------"
 		echo "端口信息"
 		echo "请您在服务器后台面板 防火墙/安全组 中 开启以下端口"
@@ -872,7 +888,6 @@ EOF
 		echo "OpenVPN安装信息: "
 		echo "节点版本没有任何后台面板，请您须知。"
 		echo "服务器通讯密码: "${Communication_password}""
-		echo "服务器PHP已经开启System Shell高级指令，请务必保管好您的通讯密码。"
 		echo "---------------------------------------------------------------"
 		echo "Zero命令信息"
 		echo "Zero服务管理命令: zero restart/start/stop/state"
@@ -882,15 +897,7 @@ EOF
 		echo "---------------------------------------------------------------"
 		echo "Trojan安装信息: "
 		echo "IP: "${Server_IP}""
-		echo "Trojan密码: "${Trojan_Password}""
 		echo "Trojan端口: 443"
-		echo "Trojan安装目录: /etc/trojan"
-		echo "---------------------------------------------------------------"
-		echo "Trojan命令信息"
-		echo "Trojan启动: systemctl start trojan.service"
-		echo "Trojan停止: systemctl stop trojan.service"
-		echo "Trojan重启: systemctl restart trojan.service"
-		echo "Trojan状态: systemctl status trojan.service"
 		echo "---------------------------------------------------------------"
 		echo "端口信息"
 		echo "请您在服务器后台面板 防火墙/安全组中 开启以下端口"
