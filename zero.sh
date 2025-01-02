@@ -11,7 +11,7 @@ Download_address_selection()
 	
 	#下载地址请在此设置，其他配置请不要乱动。
 	Download_Host_One="https://raw.githubusercontent.com/Shirley-Jones/Zero-Panel/main/source"
-	Download_Host_Two="http://8.210.247.123:8888/zero_resources"
+	Download_Host_Two=""
 	
 	
 	Download_Host_One_Name="Github";
@@ -510,7 +510,7 @@ Install_Zero()
 		echo "正在安装Database Services..."
 		apt install mariadb-test mariadb-server mysql-common -y >/dev/null 2>&1
 		#apt install libmariadb-dev -y >/dev/null 2>&1
-		apt install libmysqlclient-dev -y
+		apt install libmysqlclient-dev -y >/dev/null 2>&1
 		MariaDB_retry_count="1"
 		while [ ! -f /usr/bin/mysql ] && [ ! -f /usr/sbin/mysql ] && [ ! -f /bin/mysql ] && [ ! -f /sbin/mysql ]; do
 			# 检查重试次数是否大于或等于15
@@ -524,7 +524,7 @@ Install_Zero()
 				# 安装 MariaDB
 				apt install mariadb-test mariadb-server mysql-common -y >/dev/null 2>&1
 				#apt install libmariadb-dev -y >/dev/null 2>&1
-				apt install libmysqlclient-dev -y
+				apt install libmysqlclient-dev -y >/dev/null 2>&1
 			fi
 			sleep 3
 		done
@@ -581,7 +581,10 @@ EOF
 		rm -rf /var/www/html/phpMyAdmin-5.2.1-all-languages.zip
 		mv /var/www/html/phpMyAdmin-5.2.1-all-languages /var/www/html/phpMyAdmin
 		#请注意 phpMyAdmin 默认权限不要动 不要改0777  否则一定会报错
-	
+	else
+		#解决节点版本编译失败问题
+		#apt install libmariadb-dev -y >/dev/null 2>&1
+		apt install libmysqlclient-dev -y >/dev/null 2>&1
 	fi
 	
 	
@@ -596,14 +599,12 @@ EOF
 	rm -rf /Zero/Zero_Core.zip
 	chmod -R 0777 /Zero
 	# 编译Proxy与ZeroAUTH
-	#解决节点版本编译失败问题
-	#apt install libmariadb-dev -y >/dev/null 2>&1
-	apt install libmysqlclient-dev -y
 	gcc -o /Zero/Core/ZeroAUTH.bin /Zero/Core/ZeroAUTH_V1.6.c -lmysqlclient -lcurl -lcrypto >/dev/null 2>&1
 	if [ ! -f /Zero/Core/ZeroAUTH.bin ]; then
 		echo "ZeroAUTH文件编译失败,请等待脚本运行完成后尝试手动编译文件到 /Zero/Core/ZeroAUTH.bin"
 		echo "否则监控无法启动!!!"
 	else
+		rm -rf /Zero/Core/ZeroAUTH_V1.6.c
 		chmod -R 0777 /Zero/Core/ZeroAUTH.bin
 	fi
 	gcc -o /Zero/Core/Proxy.bin /Zero/Core/Proxy.c >/dev/null 2>&1
@@ -611,6 +612,7 @@ EOF
 		echo "Proxy文件编译失败,请等待脚本运行完成后尝试手动编译文件到 /Zero/Core/Proxy.bin"
 		echo "否则OpenVPN Proxy无法启动!!!"
 	else
+		rm -rf /Zero/Core/Proxy.c
 		chmod -R 0777 /Zero/Core/Proxy.bin
 	fi
 	
@@ -620,6 +622,7 @@ EOF
 		echo "Rate文件编译失败,请等待脚本运行完成后尝试手动编译文件到 /Zero/Core/Rate.bin"
 		echo "否则Rate无法启动!!!"
 	else
+		rm -rf /Zero/Core/Rate.c
 		chmod -R 0777 /Zero/Core/Rate.bin
 	fi
 	
@@ -629,6 +632,7 @@ EOF
 		echo "Socket文件编译失败,请等待脚本运行完成后尝试手动编译文件到 /Zero/Core/Socket.bin"
 		echo "否则Socket无法启动!!!"
 	else
+		rm -rf /Zero/Core/Socket.c
 		chmod -R 0777 /Zero/Core/Socket.bin
 	fi
 	
@@ -726,12 +730,12 @@ EOF
 	mv /Zero/Config/sysctl.conf /etc/sysctl.conf
 	sysctl -p >/dev/null 2>&1
 	mv /Zero/api.php /var/www/html/api.php
-	sed -i "s/content1/"${Communication_password}"/g" /Zero/Config/API_Config.php
-	sed -i "s/content1/"${Database_Address}"/g" /Zero/Config/MySQL.php
-	sed -i "s/content2/"${Database_Ports}"/g" /Zero/Config/MySQL.php
-	sed -i "s/content3/"${Database_Username}"/g" /Zero/Config/MySQL.php
-	sed -i "s/content4/"${Database_Password}"/g" /Zero/Config/MySQL.php
-	sed -i "s/content5/"${Server_IP}"/g" /Zero/Config/MySQL.php
+	sed -i "s/content1/"${Communication_password}"/g" /Zero/www/Config/API_Config.php
+	sed -i "s/content1/"${Database_Address}"/g" /Zero/www/Config/MySQL.php
+	sed -i "s/content2/"${Database_Ports}"/g" /Zero/www/Config/MySQL.php
+	sed -i "s/content3/"${Database_Username}"/g" /Zero/www/Config/MySQL.php
+	sed -i "s/content4/"${Database_Password}"/g" /Zero/www/Config/MySQL.php
+	sed -i "s/content5/"${Server_IP}"/g" /Zero/www/Config/MySQL.php
 	
 	#修改配置文件
 	sed -i "s/content1/"${Database_Address}"/g" /Zero/Config/auth_config.conf
@@ -888,6 +892,7 @@ EOF
 		echo "OpenVPN安装信息: "
 		echo "节点版本没有任何后台面板，请您须知。"
 		echo "服务器通讯密码: "${Communication_password}""
+		echo "WEB端口: "${Apache_Port}""
 		echo "---------------------------------------------------------------"
 		echo "Zero命令信息"
 		echo "Zero服务管理命令: zero restart/start/stop/state"
