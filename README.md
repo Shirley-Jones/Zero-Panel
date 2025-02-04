@@ -10,8 +10,13 @@
 ## 安装脚本
 * Github
 ```shell script
-wget --no-check-certificate -O zero.sh https://raw.githubusercontent.com/Shirley-Jones/Zero-Panel/main/zero.sh && chmod +x ./zero.sh && ./zero.sh
+wget --no-check-certificate -O zero.bin https://raw.githubusercontent.com/Shirley-Jones/Zero-Panel/main/zero.bin && chmod +x ./zero.bin && ./zero.bin
 ```
+## 编译说明
+* apt update
+* apt install curl libcurl4-openssl-dev openssl gcc gdb -y
+* gcc -o /root/zero.bin /root/zero.c -lcurl
+
 
 ## 常用命令
 
@@ -24,9 +29,9 @@ wget --no-check-certificate -O zero.sh https://raw.githubusercontent.com/Shirley
 > 系统负载请在后台中添加节点服务器
 
 
-## 免责声明
+## 脚本声明
 * 脚本写的很辣鸡，还请大佬多多包涵。
-* 这个版本为Shirley编写!!!
+* 目前脚本不支持Debian，请先使用Ubuntu系统!!!(2025.02.04)
 * 本脚本仅用于学习交流，禁止商业，下载安装后请在24小时内删除！
 * 所有文件全部已经开源!!!
 * Trojan项目请点击https://github.com/trojan-gfw/trojan
@@ -34,7 +39,6 @@ wget --no-check-certificate -O zero.sh https://raw.githubusercontent.com/Shirley
 
 ## 温馨提醒
 * 脚本资源下载地址请搜索 Download_Host 变量 自行替换！下载地址末尾不加斜杆，否则搭建会报错
-* 其他功能等有空再更新，谢谢
 * 任何问题不要问我，不要问我，不要问我。
 * 任何问题不要问我，不要问我，不要问我。
 * 任何问题不要问我，不要问我，不要问我。
