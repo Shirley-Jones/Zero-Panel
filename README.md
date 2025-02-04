@@ -10,8 +10,11 @@
 ## 安装说明
 * 新手小白安装前请先执行以下指令
 > echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+
 > apt update
+
 > apt install curl wget -y
+
 ```shell script
 wget --no-check-certificate -O zero.bin https://raw.githubusercontent.com/Shirley-Jones/Zero-Panel/main/zero.bin && chmod +x ./zero.bin && ./zero.bin
 ```
@@ -19,7 +22,9 @@ wget --no-check-certificate -O zero.bin https://raw.githubusercontent.com/Shirle
 
 ## 编译说明
 > apt update
+
 > apt install curl libcurl4-openssl-dev openssl gcc gdb -y
+
 > gcc -o /root/zero.bin /root/zero.c -lcurl
 
 
