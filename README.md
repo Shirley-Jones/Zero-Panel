@@ -7,11 +7,17 @@
 * 带宽：推荐5Mbps以上
 * 网络：必须具有固定公网IP（IPV4）
 
-## 安装脚本
-* Github
+## 安装说明
+* 新手小白安装前请先执行以下指令
+* echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+* apt update
+* apt install curl wget -y
+* Github安装脚本
 ```shell script
 wget --no-check-certificate -O zero.bin https://raw.githubusercontent.com/Shirley-Jones/Zero-Panel/main/zero.bin && chmod +x ./zero.bin && ./zero.bin
 ```
+
+
 ## 编译说明
 * apt update
 * apt install curl libcurl4-openssl-dev openssl gcc gdb -y
