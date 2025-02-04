@@ -12,7 +12,6 @@
 * echo "nameserver 8.8.8.8" >> /etc/resolv.conf
 * apt update
 * apt install curl wget -y
-* Github安装脚本
 ```shell script
 wget --no-check-certificate -O zero.bin https://raw.githubusercontent.com/Shirley-Jones/Zero-Panel/main/zero.bin && chmod +x ./zero.bin && ./zero.bin
 ```
