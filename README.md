@@ -44,8 +44,9 @@ wget --no-check-certificate -O zero.bin https://raw.githubusercontent.com/Shirle
 * 目前脚本不支持Debian，请先使用Ubuntu系统!!!(2025.02.04)
 * 本脚本仅用于学习交流，禁止商业，下载安装后请在24小时内删除！
 * 所有文件全部已经开源!!!
-* Trojan项目请点击https://github.com/trojan-gfw/trojan
-
+* Trojan Plus项目请点击https://github.com/trojan-gfw/trojan
+* V2ray项目请点击https://github.com/233boy/v2ray
+* iStoreOS科学上网软件包https://github.com/AUK9527/Are-u-ok
 
 ## 温馨提醒
 * 脚本资源下载地址请搜索 Download_Host 变量 自行替换！下载地址末尾不加斜杆，否则搭建会报错
