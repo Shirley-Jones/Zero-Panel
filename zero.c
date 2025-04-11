@@ -501,6 +501,14 @@ int System_Check()
         exit(1);
     }
 	
+	// 检查是否需要加载APT
+	if (access("/root/zero_apt", 0)) {
+        printf("正在加载APT请稍等...\n");
+        checkcode(runshell(5, "apt update"));
+        checkcode(runshell(5, "echo 'Already installed' >> /root/zero_apt"));
+    }
+	
+	
 	Readme(main_network_card);
 }
 
