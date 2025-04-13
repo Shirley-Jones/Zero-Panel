@@ -501,13 +501,6 @@ int System_Check()
         exit(1);
     }
 	
-	// 检查是否需要加载APT
-	if (access("/root/zero_apt", 0)) {
-        printf("正在加载APT请稍等...\n");
-        checkcode(runshell(5, "apt update"));
-        checkcode(runshell(5, "echo 'Already installed' >> /root/zero_apt"));
-    }
-	
 	
 	Readme(main_network_card);
 }
@@ -764,7 +757,7 @@ void Install_Zero(char* IP, char* Installation_type, char* main_network_card) {
 	char Download_Host_Three_Name[50] = "手动指定资源位置(本机)";
 	
 	//下载地址请在此处修改
-	char Download_Host_One[100] = "https://raw.githubusercontent.com/Shirley-Jones/Zero-Panel/master/Source";
+	char Download_Host_One[100] = "https://raw.githubusercontent.com/Shirley-Jones/Zero-Panel/refs/heads/main/source";
 	char Download_Host_Two[100] = "#";
 	char Download_Host_Three[100] = "./";
 	
@@ -889,7 +882,14 @@ void Install_Zero(char* IP, char* Installation_type, char* main_network_card) {
 				checkcode(runshell(5, "echo '/ZeroSwap none swap sw 0 0' >> /etc/fstab"));
 			}
 		}
-
+		
+		// 检查是否需要加载APT
+		if (access("/root/zero_apt", 0)) {
+			//printf("正在加载APT请稍等...\n");
+			checkcode(runshell(5, "apt update"));
+			checkcode(runshell(5, "echo 'Already installed' >> /root/zero_apt"));
+		}
+		
 		// 设置 SELinux 宽容模式
 		checkcode(runshell(3, "selinux-utils"));
 		checkcode(runshell(5, "setenforce 0"));
@@ -1448,6 +1448,7 @@ void Install_Zero(char* IP, char* Installation_type, char* main_network_card) {
 	printf("\n所有文件安装已完成，即将结束安装....");
 	sleep(3);
 	
+	printf("/n");
 	
 	setbuf(stdout,NULL);
 	system("/Zero/bin/zero clean");
