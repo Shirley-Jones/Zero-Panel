@@ -1448,7 +1448,7 @@ void Install_Zero(char* IP, char* Installation_type, char* main_network_card) {
 	printf("\n所有文件安装已完成，即将结束安装....");
 	sleep(3);
 	
-	printf("/n");
+	printf("\n");
 	
 	setbuf(stdout,NULL);
 	system("/Zero/bin/zero clean");
